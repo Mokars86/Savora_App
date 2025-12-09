@@ -1,7 +1,9 @@
 
+
 import { Group, SavingGoal, Transaction, TransactionType, ContributionRequest, User } from './types';
 
 export const MOCK_USER: User = {
+  id: "user1",
   name: "Kwame Appiah",
   email: "kwame.appiah@example.com",
   phone: "+233 55 123 4567",
@@ -39,18 +41,56 @@ export const MOCK_GROUPS: Group[] = [
     nextPayoutDate: '2023-11-01',
     myTurnDate: '2024-01-01',
     progress: 60,
-    poolAmount: 1000
+    poolAmount: 1000,
+    creatorId: 'user1', // Kwame Appiah is Admin
+    payoutRequests: [
+      {
+        id: 'pr1',
+        requesterId: 'm5',
+        requesterName: 'Abena Konadu',
+        amount: 1000,
+        date: '2023-10-25',
+        status: 'pending'
+      }
+    ],
+    members: [
+      { id: 'user1', name: 'Kwame Appiah', status: 'paid', paymentDate: '2023-10-01' },
+      { id: 'm2', name: 'Ama Osei', status: 'paid', paymentDate: '2023-10-02' },
+      { id: 'm3', name: 'Kofi Mensah', status: 'overdue' },
+      { id: 'm4', name: 'Yaw Boateng', status: 'paid', paymentDate: '2023-10-05' },
+      { id: 'm5', name: 'Abena Konadu', status: 'pending' },
+    ],
+    chatHistory: [
+      { id: 'c1', senderId: 'm2', senderName: 'Ama Osei', text: 'Has everyone paid for this month?', timestamp: '10:30 AM' },
+      { id: 'c2', senderId: 'user1', senderName: 'Kwame Appiah', text: 'I just sent mine!', timestamp: '10:32 AM' },
+      { id: 'c3', senderId: 'm4', senderName: 'Yaw Boateng', text: 'Same here. Kofi, please don’t forget o!', timestamp: '10:45 AM' }
+    ]
   },
   {
     id: '2',
     name: 'Work Colleagues',
-    totalMembers: 12,
+    totalMembers: 8,
     contributionAmount: 50,
     frequency: 'Weekly',
     nextPayout: 'John Doe',
     nextPayoutDate: '2023-10-27',
     progress: 25,
-    poolAmount: 600
+    poolAmount: 600,
+    creatorId: 'w2', // John Doe is Admin
+    payoutRequests: [],
+    members: [
+      { id: 'user1', name: 'Kwame Appiah', status: 'pending' },
+      { id: 'w2', name: 'John Doe', status: 'paid', paymentDate: '2023-10-23' },
+      { id: 'w3', name: 'Sarah Smith', status: 'overdue' },
+      { id: 'w4', name: 'Mike Johnson', status: 'overdue' },
+      { id: 'w5', name: 'Lisa Wong', status: 'paid', paymentDate: '2023-10-24' },
+      { id: 'w6', name: 'Tom Brown', status: 'paid', paymentDate: '2023-10-24' },
+      { id: 'w7', name: 'Jane Doe', status: 'pending' },
+      { id: 'w8', name: 'Peter Pan', status: 'paid', paymentDate: '2023-10-22' },
+    ],
+    chatHistory: [
+      { id: 'c1', senderId: 'w2', senderName: 'John Doe', text: 'Welcome everyone to the new cycle!', timestamp: 'Yesterday' }
+    ]
   }
 ];
 

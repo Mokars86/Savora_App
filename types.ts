@@ -1,4 +1,5 @@
 
+
 export enum TransactionType {
   DEPOSIT = 'DEPOSIT',
   WITHDRAWAL = 'WITHDRAWAL',
@@ -16,6 +17,31 @@ export interface Transaction {
   status: 'completed' | 'pending' | 'failed';
 }
 
+export interface GroupMember {
+  id: string;
+  name: string;
+  avatar?: string;
+  status: 'paid' | 'pending' | 'overdue';
+  paymentDate?: string;
+}
+
+export interface PayoutRequest {
+  id: string;
+  requesterId: string;
+  requesterName: string;
+  amount: number;
+  date: string;
+  status: 'pending' | 'approved' | 'rejected';
+}
+
+export interface ChatMessage {
+  id: string;
+  senderId: string;
+  senderName: string;
+  text: string;
+  timestamp: string;
+}
+
 export interface Group {
   id: string;
   name: string;
@@ -27,6 +53,10 @@ export interface Group {
   myTurnDate?: string;
   progress: number;
   poolAmount: number;
+  members: GroupMember[];
+  creatorId: string; // The Admin ID
+  payoutRequests: PayoutRequest[];
+  chatHistory: ChatMessage[];
 }
 
 export interface SavingGoal {
@@ -49,6 +79,7 @@ export interface LinkedAccount {
 }
 
 export interface User {
+  id: string;
   name: string;
   email: string;
   phone: string;
