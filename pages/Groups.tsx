@@ -1,16 +1,28 @@
 
-
 import React, { useState, useRef, useEffect } from 'react';
-import { Plus, Users, DollarSign, ChevronDown, ChevronUp, AlertCircle, CheckCircle, Clock, ShieldCheck, Share2, Check, X as XIcon, MessageCircle, Send } from 'lucide-react';
+import { Plus, Users, DollarSign, ChevronDown, ChevronUp, AlertCircle, CheckCircle, Clock, ShieldCheck, Share2, Check, X as XIcon, MessageCircle, Send, Link as LinkIcon } from 'lucide-react';
 import { MOCK_GROUPS } from '../constants';
 import { Group, PayoutRequest, ChatMessage } from '../types';
 import { useApp } from '../context/AppContext';
+import Savings from './Savings';
 
 const Groups = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [activeTab, setActiveTab] = useState<'my-groups' | 'explore'>('my-groups');
+  const [showJoinModal, setShowJoinModal] = useState(false);
+  const [activeTab, setActiveTab] = useState<'my-groups' | 'explore' | 'personal'>('my-groups');
   const [groups, setGroups] = useState<Group[]>(MOCK_GROUPS);
   const { user } = useApp();
+
+  // Create Form State
+  const [createFormData, setCreateFormData] = useState({
+    name: '',
+    amount: '',
+    frequency: 'Monthly',
+    maxMembers: 10
+  });
+
+  // Join Form State
+  const [joinCode, setJoinCode] = useState('');
 
   const handleApprovePayout = (groupId: string, requestId: string) => {
     setGroups(prevGroups => prevGroups.map(group => {
@@ -73,23 +85,76 @@ const Groups = () => {
     }));
   };
 
+  const handleCreateGroup = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) return;
+
+    const newGroup: Group = {
+      id: Date.now().toString(),
+      name: createFormData.name,
+      totalMembers: 1, // Start with just the creator
+      contributionAmount: Number(createFormData.amount),
+      frequency: createFormData.frequency as 'Daily' | 'Weekly' | 'Monthly',
+      nextPayout: 'Pending',
+      nextPayoutDate: 'TBD',
+      progress: 0,
+      poolAmount: 0,
+      creatorId: user.id, // Current user is Admin
+      payoutRequests: [],
+      chatHistory: [],
+      members: [{
+        id: user.id,
+        name: user.name,
+        status: 'pending',
+        avatar: user.avatar
+      }]
+    };
+
+    setGroups([newGroup, ...groups]);
+    setShowCreateModal(false);
+    setCreateFormData({ name: '', amount: '', frequency: 'Monthly', maxMembers: 10 });
+    
+    // Simulate share prompt
+    const shareLink = `https://savora.app/groups/join/${newGroup.id}`;
+    alert(`Group Created! You are the Admin.\n\nShare Link: ${shareLink}`);
+  };
+
+  const handleJoinGroup = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (joinCode.trim()) {
+      alert(`Success! You have joined the group with code: ${joinCode}`);
+      setShowJoinModal(false);
+      setJoinCode('');
+    }
+  };
+
   return (
     <div className="p-4 md:p-8 pb-24 dark:text-gray-100">
-      <div className="flex justify-between items-center mb-8">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
         <h1 className="text-2xl font-bold text-navy-900 dark:text-white">Susu Groups</h1>
-        <button 
-          onClick={() => setShowCreateModal(true)}
-          className="bg-navy-900 dark:bg-gold-500 text-white dark:text-navy-900 px-4 py-2 rounded-xl text-sm font-medium flex items-center gap-2 hover:bg-navy-800 dark:hover:bg-gold-600 transition-colors"
-        >
-          <Plus size={18} /> New Group
-        </button>
+        {activeTab !== 'personal' && (
+          <div className="flex gap-2 w-full md:w-auto">
+            <button 
+              onClick={() => setShowJoinModal(true)}
+              className="flex-1 md:flex-none bg-white dark:bg-slate-800 text-navy-900 dark:text-white border border-gray-200 dark:border-slate-700 px-4 py-2 rounded-xl text-sm font-medium flex items-center justify-center gap-2 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors"
+            >
+              <LinkIcon size={18} /> Join Group
+            </button>
+            <button 
+              onClick={() => setShowCreateModal(true)}
+              className="flex-1 md:flex-none bg-navy-900 dark:bg-gold-500 text-white dark:text-navy-900 px-4 py-2 rounded-xl text-sm font-medium flex items-center justify-center gap-2 hover:bg-navy-800 dark:hover:bg-gold-600 transition-colors shadow-lg shadow-navy-900/10"
+            >
+              <Plus size={18} /> New Group
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-4 border-b border-gray-200 dark:border-slate-700 mb-6">
+      <div className="flex gap-4 border-b border-gray-200 dark:border-slate-700 mb-6 overflow-x-auto no-scrollbar">
         <button 
           onClick={() => setActiveTab('my-groups')}
-          className={`pb-3 text-sm font-medium transition-colors relative ${
+          className={`pb-3 text-sm font-medium transition-colors relative whitespace-nowrap ${
             activeTab === 'my-groups' ? 'text-navy-900 dark:text-white' : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300'
           }`}
         >
@@ -100,7 +165,7 @@ const Groups = () => {
         </button>
         <button 
           onClick={() => setActiveTab('explore')}
-          className={`pb-3 text-sm font-medium transition-colors relative ${
+          className={`pb-3 text-sm font-medium transition-colors relative whitespace-nowrap ${
             activeTab === 'explore' ? 'text-navy-900 dark:text-white' : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300'
           }`}
         >
@@ -109,27 +174,47 @@ const Groups = () => {
              <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-navy-900 dark:bg-gold-500 rounded-t-full" />
           )}
         </button>
+        <button 
+          onClick={() => setActiveTab('personal')}
+          className={`pb-3 text-sm font-medium transition-colors relative whitespace-nowrap ${
+            activeTab === 'personal' ? 'text-navy-900 dark:text-white' : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300'
+          }`}
+        >
+          Personal Goals
+          {activeTab === 'personal' && (
+             <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-navy-900 dark:bg-gold-500 rounded-t-full" />
+          )}
+        </button>
       </div>
 
-      {/* Group List */}
-      <div className="grid md:grid-cols-2 gap-6">
-        {groups.map((group) => (
-          <GroupCard 
-            key={group.id} 
-            group={group} 
-            onApprove={handleApprovePayout}
-            onReject={handleRejectPayout}
-            onRequestPayout={handleRequestPayout}
-            onSendMessage={handleSendMessage}
-          />
-        ))}
-        {/* Add a dummy card for Explore view if needed, but keeping it simple */}
-        {activeTab === 'explore' && (
-            <div className="md:col-span-2 py-10 text-center text-gray-400 dark:text-gray-500">
-                <p>No public groups available right now.</p>
-            </div>
-        )}
-      </div>
+      {/* Content Area */}
+      {activeTab === 'personal' ? (
+        <Savings isEmbedded={true} />
+      ) : (
+        /* Group List */
+        <div className="grid md:grid-cols-2 gap-6">
+          {groups.map((group) => (
+            <GroupCard 
+              key={group.id} 
+              group={group} 
+              onApprove={handleApprovePayout}
+              onReject={handleRejectPayout}
+              onRequestPayout={handleRequestPayout}
+              onSendMessage={handleSendMessage}
+            />
+          ))}
+          {/* Empty State for Explore */}
+          {activeTab === 'explore' && (
+              <div className="md:col-span-2 py-12 text-center text-gray-400 dark:text-gray-500 bg-gray-50 dark:bg-slate-800/50 rounded-2xl border-2 border-dashed border-gray-200 dark:border-slate-700">
+                  <Users size={48} className="mx-auto mb-3 opacity-50" />
+                  <p>No public groups available right now.</p>
+                  <button onClick={() => setShowJoinModal(true)} className="text-gold-600 font-bold text-sm mt-2 hover:underline">
+                    Have a code? Join a private group
+                  </button>
+              </div>
+          )}
+        </div>
+      )}
 
       {/* Create Group Modal */}
       {showCreateModal && (
@@ -142,20 +227,38 @@ const Groups = () => {
               </button>
             </div>
 
-            <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); setShowCreateModal(false); }}>
+            <form className="space-y-4" onSubmit={handleCreateGroup}>
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Group Name</label>
-                <input type="text" placeholder="e.g. Work Colleagues" className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-slate-700 dark:text-white border border-gray-200 dark:border-slate-600 focus:outline-none focus:ring-2 focus:ring-navy-900/10 dark:focus:ring-gold-500/50" />
+                <input 
+                  type="text" 
+                  placeholder="e.g. Work Colleagues" 
+                  value={createFormData.name}
+                  onChange={(e) => setCreateFormData({...createFormData, name: e.target.value})}
+                  className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-slate-700 dark:text-white border border-gray-200 dark:border-slate-600 focus:outline-none focus:ring-2 focus:ring-navy-900/10 dark:focus:ring-gold-500/50" 
+                  required
+                />
               </div>
               
               <div className="grid grid-cols-2 gap-4">
                  <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Contribution (GHS)</label>
-                    <input type="number" placeholder="200" className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-slate-700 dark:text-white border border-gray-200 dark:border-slate-600 focus:outline-none focus:ring-2 focus:ring-navy-900/10 dark:focus:ring-gold-500/50" />
+                    <input 
+                      type="number" 
+                      placeholder="200" 
+                      value={createFormData.amount}
+                      onChange={(e) => setCreateFormData({...createFormData, amount: e.target.value})}
+                      className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-slate-700 dark:text-white border border-gray-200 dark:border-slate-600 focus:outline-none focus:ring-2 focus:ring-navy-900/10 dark:focus:ring-gold-500/50" 
+                      required
+                    />
                  </div>
                  <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Frequency</label>
-                    <select className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-slate-700 dark:text-white border border-gray-200 dark:border-slate-600 focus:outline-none focus:ring-2 focus:ring-navy-900/10 dark:focus:ring-gold-500/50">
+                    <select 
+                      value={createFormData.frequency}
+                      onChange={(e) => setCreateFormData({...createFormData, frequency: e.target.value})}
+                      className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-slate-700 dark:text-white border border-gray-200 dark:border-slate-600 focus:outline-none focus:ring-2 focus:ring-navy-900/10 dark:focus:ring-gold-500/50"
+                    >
                         <option>Daily</option>
                         <option>Weekly</option>
                         <option>Monthly</option>
@@ -164,8 +267,15 @@ const Groups = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Max Members</label>
-                <input type="range" min="2" max="50" defaultValue="10" className="w-full accent-navy-900 dark:accent-gold-500" />
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Max Members: {createFormData.maxMembers}</label>
+                <input 
+                  type="range" 
+                  min="2" 
+                  max="50" 
+                  value={createFormData.maxMembers}
+                  onChange={(e) => setCreateFormData({...createFormData, maxMembers: Number(e.target.value)})}
+                  className="w-full accent-navy-900 dark:accent-gold-500" 
+                />
                 <div className="flex justify-between text-xs text-gray-400 mt-1">
                     <span>2 members</span>
                     <span>50 members</span>
@@ -174,7 +284,48 @@ const Groups = () => {
 
               <div className="pt-4">
                 <button type="submit" className="w-full bg-gold-500 hover:bg-gold-600 text-navy-900 font-bold py-3 rounded-xl transition-colors">
-                    Create Group
+                    Create Group & Be Admin
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Join Group Modal */}
+      {showJoinModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-navy-900/40 backdrop-blur-sm">
+          <div className="bg-white dark:bg-slate-800 rounded-3xl w-full max-w-md p-6 shadow-2xl animate-in fade-in zoom-in duration-200">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xl font-bold text-navy-900 dark:text-white">Join a Group</h3>
+              <button onClick={() => setShowJoinModal(false)} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                <XIcon size={24} />
+              </button>
+            </div>
+
+            <form className="space-y-4" onSubmit={handleJoinGroup}>
+              <div className="text-center mb-6">
+                <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mx-auto mb-3 text-blue-600 dark:text-blue-400">
+                  <Users size={32} />
+                </div>
+                <p className="text-gray-500 dark:text-gray-400 text-sm">Enter the Invite Link or Group Code shared with you to join an existing Susu circle.</p>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Invite Code / Link</label>
+                <input 
+                  type="text" 
+                  placeholder="https://savora.app/groups/..." 
+                  value={joinCode}
+                  onChange={(e) => setJoinCode(e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-slate-700 dark:text-white border border-gray-200 dark:border-slate-600 focus:outline-none focus:ring-2 focus:ring-navy-900/10 dark:focus:ring-gold-500/50 text-center font-medium" 
+                  required
+                />
+              </div>
+
+              <div className="pt-4">
+                <button type="submit" className="w-full bg-navy-900 dark:bg-white dark:text-navy-900 text-white font-bold py-3 rounded-xl transition-colors">
+                    Join Group
                 </button>
               </div>
             </form>
@@ -207,7 +358,7 @@ const GroupCard: React.FC<GroupCardProps> = ({ group, onApprove, onReject, onReq
   const paidMembers = group.members.filter(m => m.status === 'paid').length;
   const overdueMembers = group.members.filter(m => m.status === 'overdue').length;
   const totalMembers = group.members.length;
-  const participationRate = Math.round((paidMembers / totalMembers) * 100);
+  const participationRate = totalMembers > 0 ? Math.round((paidMembers / totalMembers) * 100) : 0;
 
   useEffect(() => {
     if (cardTab === 'chat' && isExpanded) {

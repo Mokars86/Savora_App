@@ -58,6 +58,9 @@ export const MOCK_USER: User = {
   balance: 1450.00,
   savingsBalance: 5200.00,
   avatar: "KA",
+  referralCode: "SAVORA-KWAME-2023",
+  referralsCount: 12,
+  referralEarnings: 120,
   linkedAccounts: [
     {
       id: 'acc1',

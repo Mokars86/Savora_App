@@ -94,6 +94,9 @@ export interface User {
   balance: number;
   savingsBalance: number;
   avatar?: string;
+  referralCode?: string;
+  referralsCount?: number;
+  referralEarnings?: number;
   linkedAccounts: LinkedAccount[];
   transactions: Transaction[];
   savingsGoals: SavingGoal[];

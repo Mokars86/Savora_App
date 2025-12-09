@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { User, Mail, Phone, Shield, Bell, ChevronRight, LogOut, CreditCard, Settings, HelpCircle, Moon, Sun, Save, X, Smartphone, Trash2, CheckCircle, Building, Plus } from 'lucide-react';
+import { User, Mail, Phone, Shield, Bell, ChevronRight, LogOut, CreditCard, Settings, HelpCircle, Moon, Sun, Save, X, Smartphone, Trash2, CheckCircle, Building, Plus, Lock, KeyRound, Fingerprint, ChevronDown, ChevronUp, Gift, Copy, Share2 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { LinkedAccount } from '../types';
 
@@ -20,6 +20,16 @@ const Profile = () => {
     type: 'MOMO' as 'MOMO' | 'BANK',
     accountNumber: '',
   });
+
+  // Security Modal State
+  const [showSecurityModal, setShowSecurityModal] = useState(false);
+  const [securityState, setSecurityState] = useState({
+    biometrics: false,
+    showPasswordChange: false,
+    showPinSetup: false
+  });
+  const [passwordForm, setPasswordForm] = useState({ current: '', new: '', confirm: '' });
+  const [pinForm, setPinForm] = useState({ pin: '', confirm: '' });
 
   useEffect(() => {
     if (user) {
@@ -85,6 +95,61 @@ const Profile = () => {
     setNewAccountData({ provider: 'MTN Mobile Money', type: 'MOMO', accountNumber: '' });
   };
 
+  const handlePasswordChange = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (passwordForm.new !== passwordForm.confirm) {
+      alert("New passwords do not match!");
+      return;
+    }
+    // Simulate API call
+    alert("Password updated successfully!");
+    setSecurityState(prev => ({ ...prev, showPasswordChange: false }));
+    setPasswordForm({ current: '', new: '', confirm: '' });
+  };
+
+  const handlePinChange = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (pinForm.pin.length !== 4) {
+      alert("PIN must be 4 digits");
+      return;
+    }
+    if (pinForm.pin !== pinForm.confirm) {
+        alert("PINs do not match!");
+        return;
+    }
+    // Simulate API call
+    alert("Transaction PIN set successfully!");
+    setSecurityState(prev => ({ ...prev, showPinSetup: false }));
+    setPinForm({ pin: '', confirm: '' });
+  };
+
+  const handleCopyReferral = () => {
+      if(user?.referralCode) {
+          navigator.clipboard.writeText(user.referralCode);
+          alert("Referral code copied!");
+      }
+  };
+
+  const handleShareReferral = async () => {
+    if (!user?.referralCode) return;
+    
+    const shareData = {
+      title: 'Join Savora!',
+      text: `Join me on Savora to save smart and grow together! Use my code ${user.referralCode} to get started.`,
+      url: 'https://savora.app'
+    };
+
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+      } catch (err) {
+        console.log('Share canceled');
+      }
+    } else {
+      handleCopyReferral();
+    }
+  };
+
   if (!user) return null;
 
   return (
@@ -109,6 +174,49 @@ const Profile = () => {
              <span className="px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-full text-xs font-bold">Level 2 Saver</span>
           </div>
         </div>
+      </div>
+
+      {/* REFERRAL CARD */}
+      <div className="bg-gradient-to-r from-gold-500 to-gold-600 rounded-3xl p-6 text-navy-900 mb-8 relative overflow-hidden shadow-lg shadow-gold-500/20">
+          <div className="absolute top-0 right-0 w-48 h-48 bg-white/20 rounded-full -mr-10 -mt-10 blur-2xl"></div>
+          <div className="relative z-10">
+            <div className="flex justify-between items-center mb-4">
+              <div>
+                <h3 className="font-bold text-xl flex items-center gap-2">
+                    <Gift size={24} className="text-navy-900" /> Refer & Earn
+                </h3>
+                <p className="text-navy-900/80 text-sm mt-1">Invite friends and earn GHS 10 for each active user!</p>
+              </div>
+            </div>
+            
+            <div className="bg-white/90 backdrop-blur-sm rounded-xl p-4 flex justify-between items-center mb-4 shadow-sm">
+              <div className="flex flex-col">
+                  <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Your Code</span>
+                  <span className="font-mono font-bold tracking-widest text-lg text-navy-900">{user.referralCode}</span>
+              </div>
+              <div className="flex gap-2">
+                  <button 
+                    onClick={handleCopyReferral}
+                    className="p-2 hover:bg-gold-100 rounded-lg transition-colors text-navy-900" 
+                    title="Copy Code"
+                  >
+                      <Copy size={20}/>
+                  </button>
+                  <button 
+                    onClick={handleShareReferral}
+                    className="p-2 hover:bg-gold-100 rounded-lg transition-colors text-navy-900" 
+                    title="Share"
+                  >
+                      <Share2 size={20}/>
+                  </button>
+              </div>
+            </div>
+
+            <div className="flex gap-6 text-sm font-bold bg-navy-900/10 p-3 rounded-xl w-fit">
+              <span>🎉 {user.referralsCount} Invited</span>
+              <span>💰 GHS {user.referralEarnings} Earned</span>
+            </div>
+          </div>
       </div>
 
       <div className="grid md:grid-cols-2 gap-8">
@@ -378,12 +486,146 @@ const Profile = () => {
             </div>
           </div>
       )}
+
+      {/* Security Modal */}
+      {showSecurityModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-navy-900/60 backdrop-blur-sm">
+          <div className="bg-white dark:bg-slate-800 rounded-3xl w-full max-w-md p-6 shadow-2xl animate-in fade-in zoom-in duration-200 max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xl font-bold text-navy-900 dark:text-white flex items-center gap-2">
+                <Shield size={24} className="text-gold-500" /> Security & Privacy
+              </h3>
+              <button onClick={() => setShowSecurityModal(false)} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                <X size={24} />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              
+              {/* Change Password */}
+              <div className="border border-gray-100 dark:border-slate-700 rounded-xl overflow-hidden">
+                <button 
+                  onClick={() => setSecurityState(prev => ({ ...prev, showPasswordChange: !prev.showPasswordChange }))}
+                  className="w-full p-4 flex items-center justify-between bg-gray-50 dark:bg-slate-700/50 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400">
+                      <Lock size={16} />
+                    </div>
+                    <span className="font-semibold text-navy-900 dark:text-white">Change Password</span>
+                  </div>
+                  {securityState.showPasswordChange ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                </button>
+                
+                {securityState.showPasswordChange && (
+                  <form onSubmit={handlePasswordChange} className="p-4 bg-white dark:bg-slate-800 space-y-3">
+                    <input 
+                      type="password" 
+                      placeholder="Current Password"
+                      value={passwordForm.current}
+                      onChange={(e) => setPasswordForm({...passwordForm, current: e.target.value})}
+                      className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-slate-700 dark:text-white border border-gray-200 dark:border-slate-600 focus:outline-none focus:ring-2 focus:ring-gold-500"
+                      required
+                    />
+                    <input 
+                      type="password" 
+                      placeholder="New Password"
+                      value={passwordForm.new}
+                      onChange={(e) => setPasswordForm({...passwordForm, new: e.target.value})}
+                      className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-slate-700 dark:text-white border border-gray-200 dark:border-slate-600 focus:outline-none focus:ring-2 focus:ring-gold-500"
+                      required
+                    />
+                    <input 
+                      type="password" 
+                      placeholder="Confirm New Password"
+                      value={passwordForm.confirm}
+                      onChange={(e) => setPasswordForm({...passwordForm, confirm: e.target.value})}
+                      className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-slate-700 dark:text-white border border-gray-200 dark:border-slate-600 focus:outline-none focus:ring-2 focus:ring-gold-500"
+                      required
+                    />
+                    <button type="submit" className="w-full bg-navy-900 dark:bg-gold-500 dark:text-navy-900 text-white font-bold py-3 rounded-xl mt-2">
+                      Update Password
+                    </button>
+                  </form>
+                )}
+              </div>
+
+              {/* Transaction PIN */}
+              <div className="border border-gray-100 dark:border-slate-700 rounded-xl overflow-hidden">
+                <button 
+                  onClick={() => setSecurityState(prev => ({ ...prev, showPinSetup: !prev.showPinSetup }))}
+                  className="w-full p-4 flex items-center justify-between bg-gray-50 dark:bg-slate-700/50 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center text-purple-600 dark:text-purple-400">
+                      <KeyRound size={16} />
+                    </div>
+                    <span className="font-semibold text-navy-900 dark:text-white">Transaction PIN</span>
+                  </div>
+                  {securityState.showPinSetup ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                </button>
+                
+                {securityState.showPinSetup && (
+                  <form onSubmit={handlePinChange} className="p-4 bg-white dark:bg-slate-800 space-y-3">
+                    <div className="text-sm text-gray-500 dark:text-gray-400 mb-2">Set a 4-digit PIN for withdrawals and transfers.</div>
+                    <div className="flex gap-4">
+                        <input 
+                        type="password" 
+                        placeholder="Enter PIN"
+                        maxLength={4}
+                        value={pinForm.pin}
+                        onChange={(e) => setPinForm({...pinForm, pin: e.target.value.replace(/\D/g, '')})}
+                        className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-slate-700 dark:text-white border border-gray-200 dark:border-slate-600 focus:outline-none focus:ring-2 focus:ring-gold-500 text-center tracking-widest font-bold text-lg"
+                        required
+                        />
+                        <input 
+                        type="password" 
+                        placeholder="Confirm"
+                        maxLength={4}
+                        value={pinForm.confirm}
+                        onChange={(e) => setPinForm({...pinForm, confirm: e.target.value.replace(/\D/g, '')})}
+                        className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-slate-700 dark:text-white border border-gray-200 dark:border-slate-600 focus:outline-none focus:ring-2 focus:ring-gold-500 text-center tracking-widest font-bold text-lg"
+                        required
+                        />
+                    </div>
+                    <button type="submit" className="w-full bg-navy-900 dark:bg-gold-500 dark:text-navy-900 text-white font-bold py-3 rounded-xl mt-2">
+                      Set PIN
+                    </button>
+                  </form>
+                )}
+              </div>
+
+              {/* Biometrics */}
+              <div className="border border-gray-100 dark:border-slate-700 rounded-xl overflow-hidden">
+                <div className="w-full p-4 flex items-center justify-between bg-gray-50 dark:bg-slate-700/50">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center text-green-600 dark:text-green-400">
+                      <Fingerprint size={16} />
+                    </div>
+                    <div>
+                        <span className="font-semibold text-navy-900 dark:text-white block">Biometric Login</span>
+                        <span className="text-xs text-gray-500 dark:text-gray-400">Enable Face ID / Fingerprint</span>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={() => setSecurityState(prev => ({ ...prev, biometrics: !prev.biometrics }))}
+                    className={`w-12 h-6 rounded-full p-1 transition-colors duration-300 ${securityState.biometrics ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600'}`}
+                  >
+                    <div className={`w-4 h-4 bg-white rounded-full shadow-sm transition-transform duration-300 ${securityState.biometrics ? 'translate-x-6' : ''}`}></div>
+                  </button>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
-const SettingItem = ({ icon: Icon, title, subtitle }: { icon: any, title: string, subtitle: string }) => (
-  <button className="w-full p-4 flex items-center gap-4 border-b border-gray-50 dark:border-slate-700 last:border-0 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors text-left">
+const SettingItem = ({ icon: Icon, title, subtitle, onClick }: { icon: any, title: string, subtitle: string, onClick?: () => void }) => (
+  <button onClick={onClick} className="w-full p-4 flex items-center gap-4 border-b border-gray-50 dark:border-slate-700 last:border-0 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors text-left">
     <div className="w-10 h-10 rounded-full bg-navy-50 dark:bg-slate-700 flex items-center justify-center text-navy-900 dark:text-white">
       <Icon size={20} />
     </div>

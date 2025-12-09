@@ -4,7 +4,11 @@ import { Plus, Target, Lock, TrendingUp, X, Check } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { SavingGoal, Transaction, TransactionType } from '../types';
 
-const Savings = () => {
+interface SavingsProps {
+  isEmbedded?: boolean;
+}
+
+const Savings: React.FC<SavingsProps> = ({ isEmbedded = false }) => {
   const { user, updateUser } = useApp();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showTopUpModal, setShowTopUpModal] = useState(false);
@@ -54,7 +58,7 @@ const Savings = () => {
     }
 
     // Deduct from wallet, add to savings balance, add to specific goal
-    const updatedGoals = user.savingsGoals.map(goal => {
+    const updatedGoals = (user.savingsGoals || []).map(goal => {
         if (goal.id === selectedGoalId) {
             return { ...goal, currentAmount: goal.currentAmount + amount };
         }
@@ -86,16 +90,18 @@ const Savings = () => {
   if (!user) return null;
 
   return (
-    <div className="p-4 md:p-8 dark:text-gray-100 pb-24">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-navy-900 dark:text-white">Personal Savings</h1>
-        <button 
-          onClick={() => setShowCreateModal(true)}
-          className="bg-navy-900 dark:bg-gold-500 text-white dark:text-navy-900 p-2 rounded-full hover:bg-navy-800 dark:hover:bg-gold-600 transition-colors shadow-lg shadow-navy-900/10"
-        >
-          <Plus size={24} />
-        </button>
-      </div>
+    <div className={isEmbedded ? "mt-4" : "p-4 md:p-8 dark:text-gray-100 pb-24"}>
+      {!isEmbedded && (
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-bold text-navy-900 dark:text-white">Personal Savings</h1>
+          <button 
+            onClick={() => setShowCreateModal(true)}
+            className="bg-navy-900 dark:bg-gold-500 text-white dark:text-navy-900 p-2 rounded-full hover:bg-navy-800 dark:hover:bg-gold-600 transition-colors shadow-lg shadow-navy-900/10"
+          >
+            <Plus size={24} />
+          </button>
+        </div>
+      )}
       
       {/* Total Savings Summary */}
       <div className="bg-gradient-to-r from-blue-600 to-blue-500 dark:from-blue-900 dark:to-blue-800 rounded-3xl p-6 text-white mb-8 shadow-xl shadow-blue-500/10">

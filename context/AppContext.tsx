@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { MOCK_USER } from '../constants';
 import { User } from '../types';
@@ -59,7 +60,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     // Simulate API call
     return new Promise<void>((resolve) => {
       setTimeout(() => {
-        const user = { ...MOCK_USER, email }; // Use mock user but update email
+        // In a real app, we would validate credentials here.
+        // For prototype, we load the mock user but update email to match input if needed,
+        // or check local storage for a matching user.
+        const savedUserStr = localStorage.getItem('user');
+        let userToLoad = MOCK_USER;
+        
+        if (savedUserStr) {
+           const savedUser = JSON.parse(savedUserStr);
+           if (savedUser.email === email) {
+             userToLoad = savedUser;
+           }
+        }
+        
+        // If sticking to mock for demo:
+        const user = { ...userToLoad, email }; 
+        
         setUser(user);
         setIsAuthenticated(true);
         localStorage.setItem('user', JSON.stringify(user));
@@ -72,7 +88,36 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     // Simulate API call
     return new Promise<void>((resolve) => {
       setTimeout(() => {
-        const newUser = { ...MOCK_USER, name, email };
+        // Generate unique referral code
+        const firstName = name.split(' ')[0].toUpperCase().replace(/[^A-Z]/g, '');
+        const rand = Math.floor(1000 + Math.random() * 9000);
+        const referralCode = `SAVORA-${firstName}-${rand}`;
+
+        const newUser: User = {
+          ...MOCK_USER, // Inherit structure
+          id: Date.now().toString(),
+          name,
+          email,
+          balance: 0, // Start with 0
+          savingsBalance: 0,
+          referralCode,
+          referralEarnings: 0,
+          referralsCount: 0,
+          transactions: [],
+          savingsGoals: [],
+          linkedAccounts: [],
+          notifications: [
+            {
+              id: 'welcome',
+              title: 'Welcome to Savora!',
+              message: 'Your journey to financial freedom starts here. Create a savings goal or join a Susu group!',
+              date: 'Just now',
+              read: false,
+              type: 'success'
+            }
+          ]
+        };
+        
         setUser(newUser);
         setIsAuthenticated(true);
         localStorage.setItem('user', JSON.stringify(newUser));
