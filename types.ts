@@ -1,5 +1,4 @@
 
-
 export enum TransactionType {
   DEPOSIT = 'DEPOSIT',
   WITHDRAWAL = 'WITHDRAWAL',
@@ -78,6 +77,15 @@ export interface LinkedAccount {
   isPrimary: boolean;
 }
 
+export interface AppNotification {
+  id: string;
+  title: string;
+  message: string;
+  date: string;
+  read: boolean;
+  type: 'info' | 'success' | 'warning' | 'alert';
+}
+
 export interface User {
   id: string;
   name: string;
@@ -87,6 +95,9 @@ export interface User {
   savingsBalance: number;
   avatar?: string;
   linkedAccounts: LinkedAccount[];
+  transactions: Transaction[];
+  savingsGoals: SavingGoal[];
+  notifications: AppNotification[];
 }
 
 export interface ContributionRequest {

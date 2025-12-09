@@ -1,6 +1,54 @@
 
-
 import { Group, SavingGoal, Transaction, TransactionType, ContributionRequest, User } from './types';
+
+// Initial data definition
+const INITIAL_GOALS: SavingGoal[] = [
+  {
+    id: '1',
+    name: 'New Laptop',
+    targetAmount: 5000,
+    currentAmount: 2500,
+    deadline: '2023-12-25',
+    icon: '💻',
+    color: 'bg-blue-500'
+  },
+  {
+    id: '2',
+    name: 'Emergency Fund',
+    targetAmount: 10000,
+    currentAmount: 2700,
+    deadline: '2024-06-30',
+    icon: '🛡️',
+    color: 'bg-green-500'
+  }
+];
+
+const INITIAL_TRANSACTIONS: Transaction[] = [
+  {
+    id: 't1',
+    type: TransactionType.CONTRIBUTION,
+    amount: 200,
+    date: '2023-10-20',
+    description: 'Contribution to Family Circle',
+    status: 'completed'
+  },
+  {
+    id: 't2',
+    type: TransactionType.DEPOSIT,
+    amount: 500,
+    date: '2023-10-18',
+    description: 'Mobile Money Top-up',
+    status: 'completed'
+  },
+  {
+    id: 't3',
+    type: TransactionType.WITHDRAWAL,
+    amount: 100,
+    date: '2023-10-15',
+    description: 'Withdrawal to Bank',
+    status: 'completed'
+  }
+];
 
 export const MOCK_USER: User = {
   id: "user1",
@@ -26,6 +74,34 @@ export const MOCK_USER: User = {
       accountNumber: '1441000123456',
       accountName: 'Kwame Appiah',
       isPrimary: false
+    }
+  ],
+  transactions: INITIAL_TRANSACTIONS,
+  savingsGoals: INITIAL_GOALS,
+  notifications: [
+    {
+      id: 'n1',
+      title: 'Payment Successful',
+      message: 'Your contribution to Family Circle was successful.',
+      date: '2 mins ago',
+      read: false,
+      type: 'success'
+    },
+    {
+      id: 'n2',
+      title: 'Goal Reached!',
+      message: 'You have reached 50% of your New Laptop goal. Keep it up!',
+      date: '1 hour ago',
+      read: false,
+      type: 'info'
+    },
+    {
+      id: 'n3',
+      title: 'Security Alert',
+      message: 'New login detected from a new device.',
+      date: 'Yesterday',
+      read: true,
+      type: 'warning'
     }
   ]
 };
@@ -94,53 +170,8 @@ export const MOCK_GROUPS: Group[] = [
   }
 ];
 
-export const MOCK_GOALS: SavingGoal[] = [
-  {
-    id: '1',
-    name: 'New Laptop',
-    targetAmount: 5000,
-    currentAmount: 2500,
-    deadline: '2023-12-25',
-    icon: '💻',
-    color: 'bg-blue-500'
-  },
-  {
-    id: '2',
-    name: 'Emergency Fund',
-    targetAmount: 10000,
-    currentAmount: 2700,
-    deadline: '2024-06-30',
-    icon: '🛡️',
-    color: 'bg-green-500'
-  }
-];
-
-export const MOCK_TRANSACTIONS: Transaction[] = [
-  {
-    id: 't1',
-    type: TransactionType.CONTRIBUTION,
-    amount: 200,
-    date: '2023-10-20',
-    description: 'Contribution to Family Circle',
-    status: 'completed'
-  },
-  {
-    id: 't2',
-    type: TransactionType.DEPOSIT,
-    amount: 500,
-    date: '2023-10-18',
-    description: 'Mobile Money Top-up',
-    status: 'completed'
-  },
-  {
-    id: 't3',
-    type: TransactionType.WITHDRAWAL,
-    amount: 100,
-    date: '2023-10-15',
-    description: 'Withdrawal to Bank',
-    status: 'completed'
-  }
-];
+export const MOCK_GOALS = INITIAL_GOALS;
+export const MOCK_TRANSACTIONS = INITIAL_TRANSACTIONS;
 
 export const LEARN_ARTICLES = [
   {

@@ -1,6 +1,8 @@
+
 import React, { useState } from 'react';
-import { ArrowUpRight, Plus, Target, Users, TrendingUp, Bell, Eye, EyeOff } from 'lucide-react';
-import { MOCK_USER, MOCK_GROUPS, MOCK_GOALS } from '../constants';
+import { ArrowUpRight, Plus, Target, Users, TrendingUp, Bell, Eye, EyeOff, CheckCircle, Info, AlertTriangle } from 'lucide-react';
+import { useApp } from '../context/AppContext';
+import { MOCK_GROUPS } from '../constants';
 import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { useNavigate } from 'react-router-dom';
 
@@ -15,21 +17,76 @@ const data = [
 ];
 
 const Dashboard = () => {
+  const { user, updateUser } = useApp();
   const navigate = useNavigate();
   const [showBalance, setShowBalance] = useState(true);
+  const [showNotifications, setShowNotifications] = useState(false);
+
+  if (!user) return null;
+
+  const activeGoalsCount = user.savingsGoals ? user.savingsGoals.length : 0;
+  const unreadNotifications = user.notifications ? user.notifications.filter(n => !n.read).length : 0;
+
+  const markAllRead = () => {
+      if (user.notifications) {
+          const updated = user.notifications.map(n => ({...n, read: true}));
+          updateUser({ notifications: updated });
+      }
+      setShowNotifications(false);
+  };
 
   return (
-    <div className="p-4 md:p-8 space-y-8 pb-24 dark:text-gray-100">
+    <div className="p-4 md:p-8 space-y-8 pb-24 dark:text-gray-100 relative" onClick={() => showNotifications && setShowNotifications(false)}>
       {/* Header */}
-      <header className="flex justify-between items-center">
+      <header className="flex justify-between items-center relative z-20">
         <div onClick={() => navigate('/profile')} className="cursor-pointer group">
           <h2 className="text-gray-500 dark:text-gray-400 text-sm font-medium">Welcome back,</h2>
-          <h1 className="text-2xl md:text-3xl font-bold text-navy-900 dark:text-white group-hover:text-gold-600 transition-colors">{MOCK_USER.name}</h1>
+          <h1 className="text-2xl md:text-3xl font-bold text-navy-900 dark:text-white group-hover:text-gold-600 transition-colors">{user.name}</h1>
         </div>
-        <button className="p-2 bg-white dark:bg-slate-800 rounded-full shadow-sm border border-gray-100 dark:border-slate-700 relative hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
-          <Bell size={24} className="text-gray-600 dark:text-gray-300" />
-          <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white dark:border-slate-800"></span>
-        </button>
+        
+        <div className="relative">
+            <button 
+                onClick={(e) => { e.stopPropagation(); setShowNotifications(!showNotifications); }}
+                className="p-2 bg-white dark:bg-slate-800 rounded-full shadow-sm border border-gray-100 dark:border-slate-700 relative hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors"
+            >
+                <Bell size={24} className="text-gray-600 dark:text-gray-300" />
+                {unreadNotifications > 0 && (
+                    <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white dark:border-slate-800"></span>
+                )}
+            </button>
+
+            {/* Notification Dropdown */}
+            {showNotifications && (
+                <div className="absolute right-0 top-12 w-80 bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-gray-100 dark:border-slate-700 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                    <div className="p-4 border-b border-gray-100 dark:border-slate-700 flex justify-between items-center">
+                        <h3 className="font-bold text-navy-900 dark:text-white">Notifications</h3>
+                        <button onClick={markAllRead} className="text-xs text-gold-600 font-bold hover:underline">Mark all read</button>
+                    </div>
+                    <div className="max-h-64 overflow-y-auto">
+                        {user.notifications && user.notifications.length > 0 ? (
+                            user.notifications.map((note) => (
+                                <div key={note.id} className={`p-4 border-b border-gray-50 dark:border-slate-700 last:border-0 flex gap-3 hover:bg-gray-50 dark:hover:bg-slate-700/50 ${!note.read ? 'bg-blue-50/50 dark:bg-blue-900/10' : ''}`}>
+                                    <div className={`mt-1 ${
+                                        note.type === 'success' ? 'text-green-500' :
+                                        note.type === 'warning' ? 'text-red-500' : 'text-blue-500'
+                                    }`}>
+                                        {note.type === 'success' ? <CheckCircle size={16} /> :
+                                         note.type === 'warning' ? <AlertTriangle size={16} /> : <Info size={16} />}
+                                    </div>
+                                    <div>
+                                        <h4 className="text-sm font-semibold text-navy-900 dark:text-white">{note.title}</h4>
+                                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{note.message}</p>
+                                        <span className="text-[10px] text-gray-400 mt-2 block">{note.date}</span>
+                                    </div>
+                                </div>
+                            ))
+                        ) : (
+                            <div className="p-8 text-center text-gray-400 text-sm">No notifications</div>
+                        )}
+                    </div>
+                </div>
+            )}
+        </div>
       </header>
 
       {/* Balance Card */}
@@ -44,7 +101,7 @@ const Dashboard = () => {
                   </button>
                 </div>
                 <h3 className="text-4xl font-bold font-display">
-                  {showBalance ? `GHS ${MOCK_USER.savingsBalance.toLocaleString()}` : '•••••••'}
+                  {showBalance ? `GHS ${user.savingsBalance.toLocaleString()}` : '•••••••'}
                 </h3>
               </div>
               <div className="bg-gold-500/20 text-gold-400 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
@@ -83,7 +140,7 @@ const Dashboard = () => {
             <Target size={20} />
           </div>
           <span className="text-gray-500 dark:text-gray-400 text-sm">Active Goals</span>
-          <span className="text-xl font-bold text-navy-900 dark:text-white">{MOCK_GOALS.length}</span>
+          <span className="text-xl font-bold text-navy-900 dark:text-white">{activeGoalsCount}</span>
         </div>
       </div>
 
